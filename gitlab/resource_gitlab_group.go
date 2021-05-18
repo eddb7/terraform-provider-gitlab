@@ -16,6 +16,10 @@ import (
 	gitlab "github.com/xanzy/go-gitlab"
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func resourceGitlabGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceGitlabGroupCreate,
@@ -198,12 +202,11 @@ func resourceGitlabGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 func retryGetGroup(attempts int, sleep time.Duration, client *gitlab.Client, parentID string) (*int, error) {
 	id, err := getGroup(client, parentID)
-	rand.Seed(time.Now().UnixNano())
 	if err != nil {
 		if attempts--; attempts > 0 {
 			// Add some randomness to prevent creating a Thundering Herd
 			jitter := time.Duration(rand.Int63n(int64(2)))
-			sleep = sleep + jitter/2
+			sleep = sleep + jitter
 			time.Sleep(sleep)
 			return retryGetGroup(attempts, sleep, client, parentID)
 		}
@@ -233,6 +236,7 @@ func readParentID(parentID string, meta interface{}) (*int, error) {
 		return nil, nil
 	}
 	if id, err := strconv.Atoi(parentID); err == nil {
+		// BUG(eddb7): If path is purely numeric it may appear as an ID in this block
 		return gitlab.Int(id), err
 	}
 	client := meta.(*gitlab.Client)
