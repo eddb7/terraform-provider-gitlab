@@ -26,7 +26,6 @@ func TestAccGitlabGroup_basic(t *testing.T) {
 				Config: testAccGitlabGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabGroupExists("gitlab_group.foo", &group),
-					testAccCheckGetGitlabGroup(&group, false),
 					testAccCheckGitlabGroupAttributes(&group, &testAccGitlabGroupExpectedAttributes{
 						Name:                  fmt.Sprintf("foo-name-%d", rInt),
 						Path:                  fmt.Sprintf("foo-path-%d", rInt),
@@ -41,9 +40,25 @@ func TestAccGitlabGroup_basic(t *testing.T) {
 			},
 			// Update the group to change the description
 			{
-				Config: ``,
+				Config: testAccGitlabGroupUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGetGitlabGroup(&group, true),
+					testAccCheckGitlabGroupExists("gitlab_group.foo", &group),
+					testAccCheckGitlabGroupAttributes(&group, &testAccGitlabGroupExpectedAttributes{
+						Name:                  fmt.Sprintf("bar-name-%d", rInt),
+						Path:                  fmt.Sprintf("bar-path-%d", rInt),
+						Description:           "Terraform acceptance tests! Updated description",
+						LFSEnabled:            false,
+						Visibility:            "public", // default value
+						RequestAccessEnabled:  true,
+						ProjectCreationLevel:  "developer",
+						SubGroupCreationLevel: "maintainer",
+						RequireTwoFactorAuth:  true,
+						TwoFactorGracePeriod:  56,
+						AutoDevopsEnabled:     true,
+						EmailsDisabled:        true,
+						MentionsDisabled:      true,
+						ShareWithGroupLock:    true,
+					}),
 				),
 			},
 			// Update the group to put the name and description back
@@ -98,23 +113,12 @@ func TestAccGitlabGroupRetryGetGroup(t *testing.T) {
 					}),
 				),
 			},
+
 			// remove group
 			{
-				Config: testAccGitlabGroupConfig(rInt),
+				Config: testAccGitlabNoGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGetGitlabGroup(&emptyGroup, true),
-					testAccCheckGitlabGroupExists("gitlab_group.foo", &group),
-					testAccCheckGetGitlabGroup(&group, false),
-					testAccCheckGitlabGroupAttributes(&group, &testAccGitlabGroupExpectedAttributes{
-						Name:                  fmt.Sprintf("foo-name-%d", rInt),
-						Path:                  fmt.Sprintf("foo-path-%d", rInt),
-						Description:           "Terraform acceptance tests",
-						LFSEnabled:            true,
-						Visibility:            "public",     // default value
-						ProjectCreationLevel:  "maintainer", // default value
-						SubGroupCreationLevel: "owner",      // default value
-						TwoFactorGracePeriod:  48,           // default value
-					}),
+					testAccCheckGetGitlabGroup(&group, true)
 				),
 			},
 		},
@@ -438,6 +442,19 @@ func testAccCheckGitlabGroupDestroy(s *terraform.State) error {
 		return nil
 	}
 	return nil
+}
+
+func testAccGitlabNoGroupConfig(rInt int) string {
+	return fmt.Sprintf(`
+resource "gitlab_project" "foo" {
+  name = "foo-name-%d"
+  description = "Terraform acceptance tests"
+
+  # So that acceptance tests can be run in a gitlab organization
+  # with no billing
+  visibility_level = "public"
+}
+  `, rInt)
 }
 
 func testAccGitlabGroupConfig(rInt int) string {
