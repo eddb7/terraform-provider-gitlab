@@ -118,7 +118,7 @@ func TestAccGitlabGroupRetryGetGroup(t *testing.T) {
 			{
 				Config: testAccGitlabNoGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGetGitlabGroup(&group, true)
+					testAccCheckGetGitlabGroup(&group, true),
 				),
 			},
 		},
