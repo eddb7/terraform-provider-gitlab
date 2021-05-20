@@ -33,7 +33,7 @@ var resourceGitLabProjectSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"namespace_id": {
-		Type:     schema.TypeInt,
+		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
 	},
@@ -377,7 +377,8 @@ func resourceGitlabProjectCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("namespace_id"); ok {
-		options.NamespaceID = gitlab.Int(v.(int))
+		readParentID(v.(string))
+		options.NamespaceID = )
 	}
 
 	if v, ok := d.GetOk("description"); ok {
