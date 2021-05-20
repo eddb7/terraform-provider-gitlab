@@ -525,7 +525,11 @@ func resourceGitlabProjectUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("namespace_id") {
-		transferOptions.Namespace = gitlab.Int(d.Get("namespace_id").(int))
+		id, err := readParentID(d.Get("namespace_id").(string), meta)
+		if err != nil {
+			return err
+		}
+		transferOptions.Namespace = id
 	}
 
 	if d.HasChange("description") {
