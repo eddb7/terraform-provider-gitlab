@@ -377,8 +377,11 @@ func resourceGitlabProjectCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("namespace_id"); ok {
-		readParentID(v.(string))
-		options.NamespaceID = )
+		id, err := readParentID(v.(string), meta)
+		if err != nil {
+			return err
+		}
+		options.NamespaceID = id
 	}
 
 	if v, ok := d.GetOk("description"); ok {
