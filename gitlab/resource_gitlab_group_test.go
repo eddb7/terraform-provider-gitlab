@@ -135,8 +135,6 @@ func TestAccGitlabGroup_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGitlabGroupConfig(rInt),
-			},
-			{
 				ResourceName:            "gitlab_group.foo",
 				ImportState:             true,
 				ImportStateVerify:       true,
