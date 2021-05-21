@@ -134,7 +134,7 @@ func TestAccGitlabGroup_import(t *testing.T) {
 		CheckDestroy: testAccCheckGitlabGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGitlabGroupConfig(rInt),
+				Config:                  testAccGitlabGroupConfig(rInt),
 				ResourceName:            "gitlab_group.foo",
 				ImportState:             true,
 				ImportStateVerify:       true,
