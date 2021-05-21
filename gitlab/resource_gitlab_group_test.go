@@ -137,10 +137,9 @@ func TestAccGitlabGroup_import(t *testing.T) {
 				Config: testAccGitlabGroupConfig(rInt),
 			},
 			{
-				ResourceName:            "gitlab_group.foo",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"namespace_id"},
+				ResourceName:      "gitlab_group.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
