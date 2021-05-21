@@ -330,7 +330,7 @@ func resourceGitlabProjectSetToState(d *schema.ResourceData, project *gitlab.Pro
 	d.Set("merge_method", string(project.MergeMethod))
 	d.Set("only_allow_merge_if_pipeline_succeeds", project.OnlyAllowMergeIfPipelineSucceeds)
 	d.Set("only_allow_merge_if_all_discussions_are_resolved", project.OnlyAllowMergeIfAllDiscussionsAreResolved)
-	d.Set("namespace_id", fmt.Sprintf("%d",project.Namespace.ID))
+	d.Set("namespace_id", fmt.Sprintf("%d", project.Namespace.ID))
 	d.Set("ssh_url_to_repo", project.SSHURLToRepo)
 	d.Set("http_url_to_repo", project.HTTPURLToRepo)
 	d.Set("web_url", project.WebURL)
