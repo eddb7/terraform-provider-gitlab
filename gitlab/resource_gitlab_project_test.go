@@ -484,6 +484,35 @@ func TestAccGitlabProject_transfer(t *testing.T) {
 	})
 }
 
+func TestAccGitlabProjects_namespaceID(t *testing.T) {
+	var received gitlab.Project
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGitlabProjectDestroy,
+		Steps: []resource.TestStep{
+			// Create a project in a group
+			{
+				Config: testAccGitlabProjectNamespace(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
+					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", fmt.Sprintf("tgroup-%d", rInt)),
+				),
+			},
+			// Check project again for the read property incase it has been set to id on read
+			{
+				Config: testAccGitlabProjectNamespace(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
+					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", fmt.Sprintf("tgroup-%d", rInt)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGitlabProject_importURL(t *testing.T) {
 	// Since we do some manual setup in this test, we need to handle the test skip first.
 	if os.Getenv(resource.TestEnvVar) == "" {
@@ -860,21 +889,21 @@ func testAccCheckGitlabProjectPushRules(name string, wantPushRules *gitlab.Proje
 func testAccGitlabProjectInGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "gitlab_group" "foo" {
-  name = "foogroup-%d"
-  path = "foogroup-%d"
-  visibility_level = "public"
+	name = "foogroup-%d"
+	path = "foogroup-%d"
+	visibility_level = "public"
 }
 
 resource "gitlab_project" "foo" {
-  name = "foo-%d"
-  description = "Terraform acceptance tests"
-  namespace_id = "${gitlab_group.foo.id}"
+	name = "foo-%d"
+	description = "Terraform acceptance tests"
+	namespace_id = "${gitlab_group.foo.id}"
 
-  # So that acceptance tests can be run in a gitlab organization
-  # with no billing
-  visibility_level = "public"
+	# So that acceptance tests can be run in a gitlab organization
+	# with no billing
+	visibility_level = "public"
 }
-	`, rInt, rInt, rInt)
+`, rInt, rInt, rInt)
 }
 
 func testAccGitlabProjectTransferBetweenGroups(rInt int) string {
@@ -962,6 +991,22 @@ func testAccGitlabProjectConfigDefaultBranchSkipFunc(project *gitlab.Project, de
 
 func testAccGitlabProjectConfig(rInt int) string {
 	return testAccGitlabProjectConfigDefaultBranch(rInt, "")
+}
+
+func testAccGitlabProjectNamespace(rInt int) string {
+	return fmt.Sprintf(`
+resource "gitlab_group" "foo" {
+  name = "tgroup-%d"
+  path = "tgroup-%d"
+  visibility_level = "public"
+}
+
+resource "gitlab_project" "foo" {
+  name = "tproject-%d"
+  namespace_id = gitlab_group.foo.full_path
+  visibility_level = "public"
+}
+	`, rInt, rInt, rInt)
 }
 
 func testAccGitlabProjectUpdateConfig(rInt int) string {
