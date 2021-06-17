@@ -1006,7 +1006,7 @@ resource "gitlab_project" "foo" {
   namespace_id = gitlab_group.foo.full_path
   visibility_level = "public"
 }
-	`, rInt,rInt, rInt)
+	`, rInt, rInt, rInt)
 }
 
 func testAccGitlabProjectUpdateConfig(rInt int) string {
