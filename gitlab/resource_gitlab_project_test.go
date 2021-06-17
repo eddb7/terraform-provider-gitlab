@@ -889,21 +889,21 @@ func testAccCheckGitlabProjectPushRules(name string, wantPushRules *gitlab.Proje
 func testAccGitlabProjectInGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "gitlab_group" "foo" {
-  name = "foogroup-%d"
-  path = "foogroup-%d"
-  visibility_level = "public"
+	name = "foogroup-%d"
+	path = "foogroup-%d"
+	visibility_level = "public"
 }
 
 resource "gitlab_project" "foo" {
-  name = "foo-%d"
-  description = "Terraform acceptance tests"
-  namespace_id = "${gitlab_group.foo.id}"
+	name = "foo-%d"
+	description = "Terraform acceptance tests"
+	namespace_id = "${gitlab_group.foo2.id}"
 
-  # So that acceptance tests can be run in a gitlab organization
-  # with no billing
-  visibility_level = "public"
+	# So that acceptance tests can be run in a gitlab organization
+	# with no billing
+	visibility_level = "public"
 }
-	`, rInt, rInt, rInt)
+`, rInt, rInt, rInt)
 }
 
 func testAccGitlabProjectTransferBetweenGroups(rInt int) string {
