@@ -2,7 +2,6 @@ package gitlab
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strings"
