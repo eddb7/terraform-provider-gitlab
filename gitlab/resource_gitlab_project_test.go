@@ -997,6 +997,7 @@ func testAccGitlabProjectNamespace(rInt int) string {
 	return fmt.Sprintf(`
 resource "gitlab_group" "foo" {
   name = "tgroup-%d"
+  path = "tgroup-%d"
 }
 
 resource "gitlab_project" "foo" {
@@ -1004,7 +1005,7 @@ resource "gitlab_project" "foo" {
   namespace_id = gitlab_group.foo.full_path
   visibility_level = "public"
 }
-	`, rInt, rInt)
+	`, rInt, rInt, rInt)
 }
 
 func testAccGitlabProjectUpdateConfig(rInt int) string {
