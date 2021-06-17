@@ -1000,7 +1000,7 @@ resource "gitlab_group" "foo" {
 }
 
 resource "gitlab_project" "foo" {
-  name = "tproject-%d
+  name = "tproject-%d"
   namespace_id = gitlab_group.foo.full_path
   visibility_level = "public"
 }
