@@ -897,7 +897,7 @@ resource "gitlab_group" "foo" {
 resource "gitlab_project" "foo" {
 	name = "foo-%d"
 	description = "Terraform acceptance tests"
-	namespace_id = "${gitlab_group.foo2.id}"
+	namespace_id = "${gitlab_group.foo.id}"
 
 	# So that acceptance tests can be run in a gitlab organization
 	# with no billing
