@@ -996,13 +996,13 @@ func testAccGitlabProjectConfig(rInt int) string {
 func testAccGitlabProjectNamespace(rInt int) string {
 	return fmt.Sprintf(`
 resource "gitlab_group" "foo" {
-	name = "tgroup-%d"
+  name = "tgroup-%d"
 }
 
 resource "gitlab_project" "foo" {
-	name = "tproject-%d
-	namespace_id = gitlab_group.foo.full_path
-	visibility_level = "public"
+  name = "tproject-%d
+  namespace_id = gitlab_group.foo.full_path
+  visibility_level = "public"
 }
 	`, rInt, rInt)
 }
