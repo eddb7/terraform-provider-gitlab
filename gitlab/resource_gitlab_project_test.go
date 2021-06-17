@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"log"
 	"fmt"
 	"os"
 	"regexp"
@@ -324,6 +325,7 @@ func TestAccGitlabProject_initializeWithReadme(t *testing.T) {
 				Config: testAccGitlabProjectConfigInitializeWithReadme(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabProjectExists("gitlab_project.foo", &project),
+					testAccCheckGitlabNamespace(&project),
 					testAccCheckGitlabProjectDefaultBranch(&project, &testAccGitlabProjectExpectedAttributes{
 						DefaultBranch: "master",
 					}),
@@ -498,7 +500,7 @@ func TestAccGitlabProjects_namespaceID(t *testing.T) {
 				Config: testAccGitlabProjectNamespace(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
-					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", received.Namespace.FullPath),
+					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", fmt.Sprintf("tgroup-%d", rInt)),
 				),
 			},
 			// Check project again for the read property incase it has been set to id on read
@@ -506,7 +508,7 @@ func TestAccGitlabProjects_namespaceID(t *testing.T) {
 				Config: testAccGitlabProjectNamespace(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
-					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", received.Namespace.FullPath),
+					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", fmt.Sprintf("tgroup-%d", rInt)),
 					
 				),
 			},
@@ -1003,6 +1005,7 @@ resource "gitlab_group" "foo" {
 resource "gitlab_project" "foo" {
 	name = "tproject-%d
 	namespace_id = gitlab_group.foo.full_path
+	visibility_level = "public"
 }
 	`, rInt, rInt)
 }
