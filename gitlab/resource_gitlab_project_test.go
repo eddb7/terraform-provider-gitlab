@@ -484,6 +484,36 @@ func TestAccGitlabProject_transfer(t *testing.T) {
 	})
 }
 
+func TestAccGitlabProjects_namespaceID(t *testing.T) {
+	var received gitlab.Project
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGitlabProjectDestroy,
+		Steps: []resource.TestStep{
+			// Create a project in a group
+			{
+				Config: testAccGitlabProjectNamespace(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
+					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", received.Namespace.FullPath),
+				),
+			},
+			// Check project again for the read property incase it has been set to id on read
+			{
+				Config: testAccGitlabProjectNamespace(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
+					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", received.Namespace.FullPath),
+					
+				),
+			},
+		},
+	})
+}
+
 func TestAccGitlabProject_importURL(t *testing.T) {
 	// Since we do some manual setup in this test, we need to handle the test skip first.
 	if os.Getenv(resource.TestEnvVar) == "" {
@@ -962,6 +992,19 @@ func testAccGitlabProjectConfigDefaultBranchSkipFunc(project *gitlab.Project, de
 
 func testAccGitlabProjectConfig(rInt int) string {
 	return testAccGitlabProjectConfigDefaultBranch(rInt, "")
+}
+
+func testAccGitlabProjectNamespace(rInt int) string {
+	return fmt.Sprintf(`
+resource "gitlab_group" "foo" {
+	name = "tgroup-%d"
+}
+
+resource "gitlab_project" "foo" {
+	name = "tproject-%d
+	namespace_id = gitlab_group.foo.full_path
+}
+	`, rInt, rInt)
 }
 
 func testAccGitlabProjectUpdateConfig(rInt int) string {
