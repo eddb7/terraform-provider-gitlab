@@ -1,8 +1,8 @@
 package gitlab
 
 import (
-	"log"
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -509,7 +509,6 @@ func TestAccGitlabProjects_namespaceID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
 					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", fmt.Sprintf("tgroup-%d", rInt)),
-					
 				),
 			},
 		},
