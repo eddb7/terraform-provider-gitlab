@@ -61,6 +61,8 @@ consult the [gitlab documentation](https://docs.gitlab.com/ee/user/project/repos
 
 * `lfs_enabled` - (Optional) Enable LFS for the project.
 
+* `ci_config_path` - (Optional) Path to ci config file (e.g .gitlab-ci.yml)
+
 * `visibility_level` - (Optional) Set to `public` to create a public project.
   Valid values are `private`, `internal`, `public`.
   Repositories are created as private by default.
