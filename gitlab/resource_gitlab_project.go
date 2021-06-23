@@ -276,6 +276,10 @@ var resourceGitLabProjectSchema = map[string]*schema.Schema{
 		Default:      "private",
 		ValidateFunc: validation.StringInSlice([]string{"public", "private", "enabled", "disabled"}, true),
 	},
+	"ci_config_path": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
 	"mirror": {
 		Type:     schema.TypeBool,
 		Optional: true,
@@ -342,6 +346,7 @@ func resourceGitlabProjectSetToState(d *schema.ResourceData, project *gitlab.Pro
 	d.Set("remove_source_branch_after_merge", project.RemoveSourceBranchAfterMerge)
 	d.Set("packages_enabled", project.PackagesEnabled)
 	d.Set("pages_access_level", string(project.PagesAccessLevel))
+	d.Set("ci_config_path", project.CIConfigPath)
 	d.Set("mirror", project.Mirror)
 	d.Set("mirror_trigger_builds", project.MirrorTriggerBuilds)
 	d.Set("mirror_overwrites_diverged_branches", project.MirrorOverwritesDivergedBranches)
@@ -403,6 +408,10 @@ func resourceGitlabProjectCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("tags"); ok {
 		options.TagList = stringSetToStringSlice(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("ci_config_path"); ok {
+		options.CIConfigPath = gitlab.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("initialize_with_readme"); ok {
@@ -623,6 +632,10 @@ func resourceGitlabProjectUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("pages_access_level") {
 		options.PagesAccessLevel = stringToAccessControlValue(d.Get("pages_access_level").(string))
+	}
+
+	if d.HasChange("ci_config_path") {
+		options.CIConfigPath = gitlab.String(d.Get("ci_config_path").(string))
 	}
 
 	if d.HasChange("mirror") {
