@@ -37,6 +37,7 @@ func TestAccGitlabProject_basic(t *testing.T) {
 		ContainerRegistryEnabled:         true,
 		LFSEnabled:                       true,
 		SharedRunnersEnabled:             true,
+		CIConfigPath:                     ".gitlab-ci.yml",
 		Visibility:                       gitlab.PublicVisibility,
 		MergeMethod:                      gitlab.FastForwardMerge,
 		OnlyAllowMergeIfPipelineSucceeds: true,
@@ -325,7 +326,7 @@ func TestAccGitlabProject_initializeWithReadme(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabProjectExists("gitlab_project.foo", &project),
 					testAccCheckGitlabProjectDefaultBranch(&project, &testAccGitlabProjectExpectedAttributes{
-						DefaultBranch: "master",
+						DefaultBranch: "main",
 					}),
 				),
 			},
@@ -352,6 +353,7 @@ func TestAccGitlabProject_willError(t *testing.T) {
 		ContainerRegistryEnabled:         true,
 		LFSEnabled:                       true,
 		SharedRunnersEnabled:             true,
+		CIConfigPath:                     ".gitlab-ci.yml",
 		Visibility:                       gitlab.PublicVisibility,
 		MergeMethod:                      gitlab.FastForwardMerge,
 		OnlyAllowMergeIfPipelineSucceeds: true,
@@ -944,6 +946,7 @@ resource "gitlab_project" "foo" {
   name = "foo-%d"
   path = "foo.%d"
   description = "Terraform acceptance tests"
+  ci_config_path = ".gitlab-ci.yml"
 
   %s
 

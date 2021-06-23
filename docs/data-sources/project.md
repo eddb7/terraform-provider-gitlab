@@ -67,6 +67,8 @@ The following attributes are exported:
 
 * `archived` - Whether the project is in read-only mode (archived).
 
+* `ci_config_path` - Path to ci config file (e.g .gitlab-ci.yml)
+
 * `remove_source_branch_after_merge` - Enable `Delete source branch` option by default for all new merge requests
 
 * `packages_enabled` - Enable packages repository for the project.
