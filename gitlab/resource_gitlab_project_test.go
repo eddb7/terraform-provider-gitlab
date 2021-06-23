@@ -325,7 +325,7 @@ func TestAccGitlabProject_initializeWithReadme(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabProjectExists("gitlab_project.foo", &project),
 					testAccCheckGitlabProjectDefaultBranch(&project, &testAccGitlabProjectExpectedAttributes{
-						DefaultBranch: "master",
+						DefaultBranch: "main",
 					}),
 				),
 			},
