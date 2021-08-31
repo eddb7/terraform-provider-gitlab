@@ -495,7 +495,6 @@ func TestAccGitlabProject_transfer(t *testing.T) {
 	})
 }
 
-// lintignore: AT002 // not a Terraform import test
 func TestAccGitlabProjects_namespaceID(t *testing.T) {
 	var received gitlab.Project
 	rInt := acctest.RandInt()
@@ -525,6 +524,7 @@ func TestAccGitlabProjects_namespaceID(t *testing.T) {
 	})
 }
 
+// lintignore: AT002 // not a Terraform import test
 func TestAccGitlabProject_importURL(t *testing.T) {
 	// Since we do some manual setup in this test, we need to handle the test skip first.
 	if os.Getenv(resource.TestEnvVar) == "" {

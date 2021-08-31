@@ -82,8 +82,7 @@ func TestAccGitlabGroup_basic(t *testing.T) {
 	})
 }
 
-// lintignore: AT002 // TODO: Resolve this tfproviderlint issue
-func TestAccGitlabGroupRetryGetGroup(t *testing.T) {
+func TestAccGitlabGroup_retry(t *testing.T) {
 	var group gitlab.Group
 	var emptyGroup = gitlab.Group{
 		FullPath: "made/up/path",
@@ -126,6 +125,7 @@ func TestAccGitlabGroupRetryGetGroup(t *testing.T) {
 	})
 }
 
+// lintignore: AT002 // TODO: Resolve this tfproviderlint issue
 func TestAccGitlabGroup_import(t *testing.T) {
 	rInt := acctest.RandInt()
 
