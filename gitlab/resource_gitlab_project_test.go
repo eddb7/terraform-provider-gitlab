@@ -40,6 +40,7 @@ func TestAccGitlabProject_basic(t *testing.T) {
 		ContainerRegistryEnabled:         true,
 		LFSEnabled:                       true,
 		SharedRunnersEnabled:             true,
+		CIConfigPath:                     ".gitlab-ci.yml",
 		Visibility:                       gitlab.PublicVisibility,
 		MergeMethod:                      gitlab.FastForwardMerge,
 		OnlyAllowMergeIfPipelineSucceeds: true,
@@ -330,7 +331,13 @@ func TestAccGitlabProject_initializeWithReadme(t *testing.T) {
 				Config: testAccGitlabProjectConfigInitializeWithReadme(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabProjectExists("gitlab_project.foo", &project),
+<<<<<<< HEAD
 					testAccCheckGitlabProjectDefaultBranch(&project, nil),
+=======
+					testAccCheckGitlabProjectDefaultBranch(&project, &testAccGitlabProjectExpectedAttributes{
+						DefaultBranch: "main",
+					}),
+>>>>>>> 46b1daac17394ec91903b68a4095552d9cb6ce3c
 				),
 			},
 		},
@@ -356,6 +363,7 @@ func TestAccGitlabProject_willError(t *testing.T) {
 		ContainerRegistryEnabled:         true,
 		LFSEnabled:                       true,
 		SharedRunnersEnabled:             true,
+		CIConfigPath:                     ".gitlab-ci.yml",
 		Visibility:                       gitlab.PublicVisibility,
 		MergeMethod:                      gitlab.FastForwardMerge,
 		OnlyAllowMergeIfPipelineSucceeds: true,
@@ -492,7 +500,39 @@ func TestAccGitlabProject_transfer(t *testing.T) {
 	})
 }
 
+<<<<<<< HEAD
 // lintignore: AT002 // not a Terraform import test
+=======
+func TestAccGitlabProjects_namespaceID(t *testing.T) {
+	var received gitlab.Project
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGitlabProjectDestroy,
+		Steps: []resource.TestStep{
+			// Create a project in a group
+			{
+				Config: testAccGitlabProjectNamespace(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
+					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", fmt.Sprintf("tgroup-%d", rInt)),
+				),
+			},
+			// Check project again for the read property incase it has been set to id on read
+			{
+				Config: testAccGitlabProjectNamespace(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGitlabProjectExists("gitlab_project.foo", &received),
+					resource.TestCheckResourceAttr("gitlab_project.foo", "namespace_id", fmt.Sprintf("tgroup-%d", rInt)),
+				),
+			},
+		},
+	})
+}
+
+>>>>>>> 46b1daac17394ec91903b68a4095552d9cb6ce3c
 func TestAccGitlabProject_importURL(t *testing.T) {
 	// Since we do some manual setup in this test, we need to handle the test skip first.
 	if os.Getenv(resource.TestEnvVar) == "" {
@@ -927,22 +967,22 @@ func testAccCheckGitlabProjectPushRules(name string, wantPushRules *gitlab.Proje
 func testAccGitlabProjectInGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "gitlab_group" "foo" {
-  name = "foogroup-%d"
-  path = "foogroup-%d"
-  visibility_level = "public"
+	name = "foogroup-%d"
+	path = "foogroup-%d"
+	visibility_level = "public"
 }
 
 resource "gitlab_project" "foo" {
-  name = "foo-%d"
-  description = "Terraform acceptance tests"
-  namespace_id = "${gitlab_group.foo.id}"
+	name = "foo-%d"
+	description = "Terraform acceptance tests"
+	namespace_id = "${gitlab_group.foo.id}"
 
   # So that acceptance tests can be run in a gitlab organization
   # with no billing
   visibility_level = "public"
   build_coverage_regex = "foo"
 }
-	`, rInt, rInt, rInt)
+`, rInt, rInt, rInt)
 }
 
 func testAccGitlabProjectTransferBetweenGroups(rInt int) string {
@@ -984,6 +1024,7 @@ resource "gitlab_project" "foo" {
   name = "foo-%d"
   path = "foo.%d"
   description = "Terraform acceptance tests"
+  ci_config_path = ".gitlab-ci.yml"
 
   %s
 
@@ -1033,6 +1074,22 @@ func testAccGitlabProjectConfigDefaultBranchSkipFunc(project *gitlab.Project, de
 
 func testAccGitlabProjectConfig(rInt int) string {
 	return testAccGitlabProjectConfigDefaultBranch(rInt, "")
+}
+
+func testAccGitlabProjectNamespace(rInt int) string {
+	return fmt.Sprintf(`
+resource "gitlab_group" "foo" {
+  name = "tgroup-%d"
+  path = "tgroup-%d"
+  visibility_level = "public"
+}
+
+resource "gitlab_project" "foo" {
+  name = "tproject-%d"
+  namespace_id = gitlab_group.foo.full_path
+  visibility_level = "public"
+}
+	`, rInt, rInt, rInt)
 }
 
 func testAccGitlabProjectUpdateConfig(rInt int) string {

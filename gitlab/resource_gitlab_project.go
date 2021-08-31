@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -33,7 +34,7 @@ var resourceGitLabProjectSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"namespace_id": {
-		Type:     schema.TypeInt,
+		Type:     schema.TypeString,
 		Optional: true,
 		Computed: true,
 	},
@@ -249,6 +250,10 @@ var resourceGitLabProjectSchema = map[string]*schema.Schema{
 	},
 	// The GitLab API requires that import_url is also set when mirror options are used
 	// Ref: https://github.com/gitlabhq/terraform-provider-gitlab/pull/449#discussion_r549729230
+	"ci_config_path": {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
 	"mirror": {
 		Type:         schema.TypeBool,
 		Optional:     true,
@@ -274,10 +279,6 @@ var resourceGitLabProjectSchema = map[string]*schema.Schema{
 		RequiredWith: []string{"import_url"},
 	},
 	"build_coverage_regex": {
-		Type:     schema.TypeString,
-		Optional: true,
-	},
-	"ci_config_path": {
 		Type:     schema.TypeString,
 		Optional: true,
 	},
@@ -316,7 +317,7 @@ func resourceGitlabProjectSetToState(d *schema.ResourceData, project *gitlab.Pro
 	d.Set("merge_method", string(project.MergeMethod))
 	d.Set("only_allow_merge_if_pipeline_succeeds", project.OnlyAllowMergeIfPipelineSucceeds)
 	d.Set("only_allow_merge_if_all_discussions_are_resolved", project.OnlyAllowMergeIfAllDiscussionsAreResolved)
-	d.Set("namespace_id", project.Namespace.ID)
+	d.Set("namespace_id", setNamespaceID(d, project))
 	d.Set("ssh_url_to_repo", project.SSHURLToRepo)
 	d.Set("http_url_to_repo", project.HTTPURLToRepo)
 	d.Set("web_url", project.WebURL)
@@ -329,6 +330,7 @@ func resourceGitlabProjectSetToState(d *schema.ResourceData, project *gitlab.Pro
 	d.Set("remove_source_branch_after_merge", project.RemoveSourceBranchAfterMerge)
 	d.Set("packages_enabled", project.PackagesEnabled)
 	d.Set("pages_access_level", string(project.PagesAccessLevel))
+	d.Set("ci_config_path", project.CIConfigPath)
 	d.Set("mirror", project.Mirror)
 	d.Set("mirror_trigger_builds", project.MirrorTriggerBuilds)
 	d.Set("mirror_overwrites_diverged_branches", project.MirrorOverwritesDivergedBranches)
@@ -336,6 +338,18 @@ func resourceGitlabProjectSetToState(d *schema.ResourceData, project *gitlab.Pro
 	d.Set("build_coverage_regex", project.BuildCoverageRegex)
 	d.Set("ci_config_path", project.CIConfigPath)
 	return nil
+}
+
+func setNamespaceID(d *schema.ResourceData, project *gitlab.Project) string {
+	ns := d.Get("namespace_id").(string)
+	if ns != "" {
+		_, err := strconv.Atoi(ns)
+		if err == nil {
+			return fmt.Sprintf("%d", project.Namespace.ID)
+		}
+		return project.Namespace.FullPath
+	}
+	return fmt.Sprintf("%d", project.Namespace.ID)
 }
 
 func resourceGitlabProjectCreate(d *schema.ResourceData, meta interface{}) error {
@@ -370,7 +384,11 @@ func resourceGitlabProjectCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("namespace_id"); ok {
-		options.NamespaceID = gitlab.Int(v.(int))
+		id, err := readParentID(v.(string), meta)
+		if err != nil {
+			return err
+		}
+		options.NamespaceID = id
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -383,6 +401,10 @@ func resourceGitlabProjectCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("tags"); ok {
 		options.TagList = stringSetToStringSlice(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("ci_config_path"); ok {
+		options.CIConfigPath = gitlab.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("initialize_with_readme"); ok {
@@ -589,7 +611,11 @@ func resourceGitlabProjectUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("namespace_id") {
-		transferOptions.Namespace = gitlab.Int(d.Get("namespace_id").(int))
+		id, err := readParentID(d.Get("namespace_id").(string), meta)
+		if err != nil {
+			return err
+		}
+		transferOptions.Namespace = id
 	}
 
 	if d.HasChange("description") {
@@ -670,6 +696,10 @@ func resourceGitlabProjectUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("pages_access_level") {
 		options.PagesAccessLevel = stringToAccessControlValue(d.Get("pages_access_level").(string))
+	}
+
+	if d.HasChange("ci_config_path") {
+		options.CIConfigPath = gitlab.String(d.Get("ci_config_path").(string))
 	}
 
 	if d.HasChange("mirror") {

@@ -1,9 +1,12 @@
 package gitlab
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,6 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	gitlab "github.com/xanzy/go-gitlab"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func resourceGitlabGroup() *schema.Resource {
 	return &schema.Resource{
@@ -107,10 +114,10 @@ func resourceGitlabGroup() *schema.Resource {
 				Default:  48,
 			},
 			"parent_id": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  0,
+				Default:  "",
 			},
 			"runners_token": {
 				Type:      schema.TypeString,
@@ -174,7 +181,11 @@ func resourceGitlabGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("parent_id"); ok {
-		options.ParentID = gitlab.Int(v.(int))
+		id, err := readParentID(v.(string), meta)
+		if err != nil {
+			return err
+		}
+		options.ParentID = id
 	}
 
 	log.Printf("[DEBUG] create gitlab group %q", *options.Name)
@@ -187,6 +198,49 @@ func resourceGitlabGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(fmt.Sprintf("%d", group.ID))
 
 	return resourceGitlabGroupRead(d, meta)
+}
+
+func retryGetGroup(attempts int, sleep time.Duration, client *gitlab.Client, parentID string) (*int, error) {
+	id, err := getGroup(client, parentID)
+	if err != nil {
+		if attempts--; attempts > 0 {
+			// Add some randomness to prevent creating a Thundering Herd
+			jitter := time.Duration(rand.Int63n(int64(2)))
+			sleep = sleep + jitter
+			time.Sleep(sleep)
+			return retryGetGroup(attempts, sleep, client, parentID)
+		}
+		return nil, err
+	}
+	return id, err
+}
+
+func getGroup(client *gitlab.Client, parentID string) (*int, error) {
+	group, resp, err := client.Groups.GetGroup(parentID)
+	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			log.Printf("[DEBUG] gitlab group %s not found", parentID)
+			return nil, err
+		}
+		return nil, err
+	}
+	if group.MarkedForDeletionOn != nil {
+		log.Printf("[DEBUG] gitlab group %s is marked for deletion", parentID)
+		return nil, errors.New("")
+	}
+	return gitlab.Int(group.ID), nil
+}
+
+func readParentID(parentID string, meta interface{}) (*int, error) {
+	if parentID == "" {
+		return nil, nil
+	}
+	if id, err := strconv.Atoi(parentID); err == nil {
+		// BUG(eddb7): If path is purely numeric it may appear as an ID in this block
+		return gitlab.Int(id), err
+	}
+	client := meta.(*gitlab.Client)
+	return retryGetGroup(25, 3*time.Second, client, parentID)
 }
 
 func resourceGitlabGroupRead(d *schema.ResourceData, meta interface{}) error {

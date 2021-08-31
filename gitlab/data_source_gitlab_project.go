@@ -39,6 +39,10 @@ func dataSourceGitlabProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ci_config_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"request_access_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -185,6 +189,7 @@ func dataSourceGitlabProjectRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("namespace_id", found.Namespace.ID)
 	d.Set("ssh_url_to_repo", found.SSHURLToRepo)
 	d.Set("http_url_to_repo", found.HTTPURLToRepo)
+	d.Set("ci_config_path", found.CIConfigPath)
 	d.Set("web_url", found.WebURL)
 	d.Set("runners_token", found.RunnersToken)
 	d.Set("archived", found.Archived)

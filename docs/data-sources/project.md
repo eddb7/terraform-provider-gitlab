@@ -31,7 +31,7 @@ The following attributes are exported:
 * `path_with_namespace` - The path of the repository with namespace.
 
 * `namespace_id` - The namespace (group or user) of the project. Defaults to your user.
-  See [`gitlab_group`](../resources/group) for an example.
+  See [`gitlab_group`](../resources/group) for an example. Can use full URL path to specify group
 
 * `description` - A description of the project.
 
@@ -66,6 +66,8 @@ The following attributes are exported:
 * `runners_token` - Registration token to use during runner setup.
 
 * `archived` - Whether the project is in read-only mode (archived).
+
+* `ci_config_path` - Path to ci config file (e.g .gitlab-ci.yml)
 
 * `remove_source_branch_after_merge` - Enable `Delete source branch` option by default for all new merge requests
 

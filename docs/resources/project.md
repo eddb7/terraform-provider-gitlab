@@ -34,7 +34,7 @@ The following arguments are supported:
 * `path` - (Optional) The path of the repository.
 
 * `namespace_id` - (Optional) The namespace (group or user) of the project. Defaults to your user.
-  See [`gitlab_group`](group.html) for an example.
+  See [`gitlab_group`](group.html) for an example. Can use ID or full URL path
 
 * `description` - (Optional) A description of the project.
 
@@ -70,6 +70,8 @@ consult the [gitlab documentation](https://docs.gitlab.com/ee/user/project/repos
 * `container_registry_enabled` - (Optional) Enable container registry for the project.
 
 * `lfs_enabled` - (Optional) Enable LFS for the project.
+
+* `ci_config_path` - (Optional) Path to ci config file (e.g .gitlab-ci.yml)
 
 * `visibility_level` - (Optional) Set to `public` to create a public project.
   Valid values are `private`, `internal`, `public`.
