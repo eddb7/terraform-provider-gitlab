@@ -207,7 +207,7 @@ func retryGetGroup(attempts int, sleep time.Duration, client *gitlab.Client, par
 			// Add some randomness to prevent creating a Thundering Herd
 			jitter := time.Duration(rand.Int63n(int64(2)))
 			sleep = sleep + jitter
-			// lintignore: R018 
+			// lintignore: R018
 			time.Sleep(sleep)
 			return retryGetGroup(attempts, sleep, client, parentID)
 		}
