@@ -40,7 +40,6 @@ func TestAccGitlabProject_basic(t *testing.T) {
 		ContainerRegistryEnabled:         true,
 		LFSEnabled:                       true,
 		SharedRunnersEnabled:             true,
-		CIConfigPath:                     ".gitlab-ci.yml",
 		Visibility:                       gitlab.PublicVisibility,
 		MergeMethod:                      gitlab.FastForwardMerge,
 		OnlyAllowMergeIfPipelineSucceeds: true,
@@ -331,13 +330,10 @@ func TestAccGitlabProject_initializeWithReadme(t *testing.T) {
 				Config: testAccGitlabProjectConfigInitializeWithReadme(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitlabProjectExists("gitlab_project.foo", &project),
-<<<<<<< HEAD
 					testAccCheckGitlabProjectDefaultBranch(&project, nil),
-=======
 					testAccCheckGitlabProjectDefaultBranch(&project, &testAccGitlabProjectExpectedAttributes{
 						DefaultBranch: "main",
 					}),
->>>>>>> 46b1daac17394ec91903b68a4095552d9cb6ce3c
 				),
 			},
 		},
@@ -363,7 +359,6 @@ func TestAccGitlabProject_willError(t *testing.T) {
 		ContainerRegistryEnabled:         true,
 		LFSEnabled:                       true,
 		SharedRunnersEnabled:             true,
-		CIConfigPath:                     ".gitlab-ci.yml",
 		Visibility:                       gitlab.PublicVisibility,
 		MergeMethod:                      gitlab.FastForwardMerge,
 		OnlyAllowMergeIfPipelineSucceeds: true,
@@ -500,9 +495,7 @@ func TestAccGitlabProject_transfer(t *testing.T) {
 	})
 }
 
-<<<<<<< HEAD
 // lintignore: AT002 // not a Terraform import test
-=======
 func TestAccGitlabProjects_namespaceID(t *testing.T) {
 	var received gitlab.Project
 	rInt := acctest.RandInt()
@@ -532,7 +525,6 @@ func TestAccGitlabProjects_namespaceID(t *testing.T) {
 	})
 }
 
->>>>>>> 46b1daac17394ec91903b68a4095552d9cb6ce3c
 func TestAccGitlabProject_importURL(t *testing.T) {
 	// Since we do some manual setup in this test, we need to handle the test skip first.
 	if os.Getenv(resource.TestEnvVar) == "" {
