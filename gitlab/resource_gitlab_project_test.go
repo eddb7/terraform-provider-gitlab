@@ -1016,7 +1016,6 @@ resource "gitlab_project" "foo" {
   name = "foo-%d"
   path = "foo.%d"
   description = "Terraform acceptance tests"
-  ci_config_path = ".gitlab-ci.yml"
 
   %s
 
