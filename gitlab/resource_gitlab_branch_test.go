@@ -37,10 +37,22 @@ func TestAccGitlabBranch_basic(t *testing.T) {
 						Commit:  true,
 					}),
 					testAccCheckGitlabBranchRef("foo2", fooBranchName),
+					testAccCheckGitlabBranchCommit("foo2"),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckGitlabBranchCommit(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[fmt.Sprintf("gitlab_branch.%s", n)]
+		commit := rs.Primary.Attributes["commit.id"]
+		if commit == "" {
+			return fmt.Errorf("expected commit to be populated")
+		}
+		return nil
+	}
 }
 
 func testAccCheckGitlabBranchRef(n, expectedRef string) resource.TestCheckFunc {
@@ -64,7 +76,7 @@ func testAccCheckGitlabBranchDestroy(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*gitlab.Client)
 		branch, resp, err := conn.Branches.GetBranch(project, name)
 		if err == nil {
-			if branch != nil && fmt.Sprintf("%s", branch.Name) == name {
+			if branch != nil && branch.Name == name {
 				return fmt.Errorf("Branch still exists")
 			}
 		}
@@ -82,7 +94,7 @@ func testAccCheckGitlabBranchAttributes(n, p string, branch *gitlab.Branch, want
 			return errors.New("got empty web url")
 		}
 		projectID := s.RootModule().Resources[fmt.Sprintf("gitlab_project.%s", p)].Primary.ID
-		if s.RootModule().Resources[fmt.Sprintf("gitlab_branch.%s", n)].Primary.ID != fmt.Sprintf("%s-%s", projectID, want.Name) {
+		if s.RootModule().Resources[fmt.Sprintf("gitlab_branch.%s", n)].Primary.ID != fmt.Sprintf("%s:%s", projectID, want.Name) {
 			return fmt.Errorf("Got ID: %s expected: %s-%s", s.RootModule().Resources[fmt.Sprintf("gitlab_branch.%s", n)].Primary.ID, projectID, want.Name)
 		}
 		if want.Commit {

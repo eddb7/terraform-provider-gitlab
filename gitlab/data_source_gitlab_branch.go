@@ -1,7 +1,6 @@
 package gitlab
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -37,69 +36,58 @@ func dataSourceGitlabBranch() *schema.Resource {
 				Computed: true,
 			},
 			"commit": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"author_email": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"author_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"authored_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"committed_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"committer_email": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"committer_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"short_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"title": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"message": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"parent_ids": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-					},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				// Schema: map[string]*schema.Schema{
+				// "id": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "author_email": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "author_name": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "authored_date": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "committed_date": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "committer_email": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "committer_name": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "short_id": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "title": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "message": {
+				// 	Type:     schema.TypeString,
+				// 	Computed: true,
+				// },
+				// "parent_ids": {
+				// 	Type:     schema.TypeSet,
+				// 	Computed: true,
+				// 	Elem:     &schema.Schema{Type: schema.TypeString},
+				// 	Set:      schema.HashString,
+				// },
+				// },
+				// },
 			},
 		},
 	}
@@ -115,7 +103,8 @@ func dataSourceGitlabBranchRead(d *schema.ResourceData, meta interface{}) error 
 		log.Printf("[DEBUG] failed to read gitlab branch %s response %v", name, resp)
 		return err
 	}
-	d.SetId(fmt.Sprintf("%s-%s", project, name))
+
+	d.SetId(buildTwoPartID(&project, &name))
 	d.Set("name", branch.Name)
 	d.Set("project", project)
 	d.Set("web_url", branch.WebURL)

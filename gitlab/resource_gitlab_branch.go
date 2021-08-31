@@ -1,7 +1,6 @@
 package gitlab
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	gitlab "github.com/xanzy/go-gitlab"
 	"log"
@@ -12,6 +11,9 @@ func resourceGitlabBranch() *schema.Resource {
 		Create: resourceGitlabBranchCreate,
 		Read:   resourceGitlabBranchRead,
 		Delete: resourceGitlabBranchDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -26,8 +28,7 @@ func resourceGitlabBranch() *schema.Resource {
 			"ref": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Optional: true,
-				Default:  "master",
+				Required: true,
 			},
 			"web_url": {
 				Type:     schema.TypeString,
@@ -46,63 +47,52 @@ func resourceGitlabBranch() *schema.Resource {
 				Computed: true,
 			},
 			"commit": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeMap,
 				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"author_email": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"author_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"authored_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"committed_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"committer_email": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"committer_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"short_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"title": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-						"message": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-					},
-				},
-			},
+				Elem:     &schema.Schema{Type: schema.TypeString}}, // Schema: map[string]*schema.Schema{
+			// 	"id": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"author_email": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"author_name": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"authored_date": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"committed_date": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"committer_email": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"committer_name": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"short_id": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"title": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// 	"message": {
+			// 		Type:     schema.TypeString,
+			// 		Computed: true,
+			// 	},
+			// },
+
+			// },
 		},
 	}
 }
@@ -133,10 +123,15 @@ func resourceGitlabBranchRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] read gitlab branch %s", name)
 	branch, resp, err := client.Branches.GetBranch(project, name)
 	if err != nil {
+		if resp.StatusCode == 404 {
+			log.Printf("[DEBUG] recieved 404 for gitlab branch %s, removing from state", name)
+			d.SetId("")
+			return err
+		}
 		log.Printf("[DEBUG] failed to read gitlab branch %s response %v", name, resp)
 		return err
 	}
-	d.SetId(fmt.Sprintf("%s-%s", project, name))
+	d.SetId(buildTwoPartID(&project, &name))
 	d.Set("name", branch.Name)
 	d.Set("project", project)
 	d.Set("ref", ref)
@@ -164,18 +159,16 @@ func resourceGitlabBranchDelete(d *schema.ResourceData, meta interface{}) error 
 	return err
 }
 
-func flattenCommit(commit *gitlab.Commit) (values []map[string]interface{}) {
+func flattenCommit(commit *gitlab.Commit) (values map[string]interface{}) {
 	if commit == nil {
-		return []map[string]interface{}{}
+		return map[string]interface{}{}
 	}
 
-	return []map[string]interface{}{
-		{
-			"id":          commit.ID,
-			"short_id":    commit.ShortID,
-			"title":       commit.Title,
-			"author_name": commit.AuthorName,
-			"message":     commit.Message,
-		},
+	return map[string]interface{}{
+		"id":          commit.ID,
+		"short_id":    commit.ShortID,
+		"title":       commit.Title,
+		"author_name": commit.AuthorName,
+		"message":     commit.Message,
 	}
 }
