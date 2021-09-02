@@ -28,7 +28,8 @@ func resourceGitlabBranch() *schema.Resource {
 			"ref": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Required: true,
+				Optional: true,
+				Default:  "main", // Default value required for import logic -- api does not return consistent value to use for ref
 			},
 			"web_url": {
 				Type:     schema.TypeString,
@@ -145,14 +146,6 @@ func resourceGitlabBranchRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	ref := d.Get("ref").(string)
-	// use ref on last pipeline run when ref is empty (in case of import)
-	if ref == "" {
-		commit, _, err := client.Commits.GetCommit(project, branch.Commit.ID)
-		if err != nil {
-			return err
-		}
-		ref = commit.LastPipeline.Ref
-	}
 	d.SetId(buildTwoPartID(&project, &name))
 	d.Set("name", branch.Name)
 	d.Set("project", project)
@@ -187,11 +180,17 @@ func flattenCommit(commit *gitlab.Commit) (values []map[string]interface{}) {
 	}
 	return []map[string]interface{}{
 		{
-			"id":          commit.ID,
-			"short_id":    commit.ShortID,
-			"title":       commit.Title,
-			"author_name": commit.AuthorName,
-			"message":     commit.Message,
+			"id":              commit.ID,
+			"short_id":        commit.ShortID,
+			"title":           commit.Title,
+			"author_name":     commit.AuthorName,
+			"author_email":    commit.AuthorEmail,
+			"authored_date":   commit.AuthoredDate.String(),
+			"committed_date":  commit.CommittedDate.String(),
+			"committer_email": commit.CommitterEmail,
+			"committer_name":  commit.CommitterName,
+			"message":         commit.Message,
+			"parent_ids":      commit.ParentIDs,
 		},
 	}
 }
